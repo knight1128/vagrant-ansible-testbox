@@ -1,0 +1,38 @@
+--- 
+- name: check if tomcat path exists 
+  stat: path=/app/src
+
+- name: if tomcat dir exists 
+  stat: path=/app/tomcat
+
+- name: download Tomcat
+  get_url: url=http://archive.apache.org/dist/tomcat/tomcat-7/v7.0.54/bin/apache-tomcat-7.0.54.tar.gz dest=/app/src/apache-tomcat-7.0.54.tar.gz
+
+- name: extract archive tomcat
+  command: chdir=/app /bin/tar xvf /app/src/apache-tomcat-7.0.54.tar.gz -C /app/ creates=/app/apache-tomcat-7.0.54
+
+- name: symlink install directory
+  file: src=/app/apache-tomcat-7.0.54 path=/app/tomcat state=link
+
+- name: change ownership of Tomcat installation
+  file: path=/app/tomcat owner=vagrant group=vagrant state=directory recurse=yes
+
+- name: configure Tomcat server
+  template: src=server.xml dest={{ tomcat_dir }}/conf/
+  notify: restart tomcat
+
+- name: copy war to webapps
+  command: cp {{ git_location }}/target/hello-1.0.war {{ tomcat_dir }}/webapps  
+
+- name: install Tomcat init script
+  copy: src=tomcat-initscript.sh dest=/etc/init.d/tomcat mode=0755
+  
+- name: start Tomcat
+  service: name=tomcat state=restarted enabled=yes
+  register: result
+
+- debug: var=result
+
+- name: wait for tomcat to start
+  wait_for: port=8080
+  

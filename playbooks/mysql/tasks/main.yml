@@ -1,0 +1,21 @@
+---
+
+- stat: path=/usr/bin/mysqld
+  register: mysqld_exist
+
+- name: mysql 5.5 installation 
+  apt: pkg=mysql-server-5.5 state=present update_cache=yes
+  when: mysqld_exist.stat.exists == false
+
+- name: copy conf.d/mysqld.cnf
+  action: template src=mysqld.cnf.j2 dest=/etc/mysql/conf.d/mysqld.cnf
+  notify: restart mysql
+
+# use mysql_db or shell import?
+- shell: /usr/bin/mysql -u root --password= -e "DROP TABLE IF EXISTS hello ; CREATE DATABASE IF NOT EXISTS hello; USE hello; CREATE TABLE person (id INT PRIMARY KEY AUTO_INCREMENT,name VARCHAR(50));"
+  ignore_errors: True
+  when: mysqld_exist.stat.exists == true
+
+- name: start mysql
+  service: name=mysql state=restarted enabled=yes
+  sudo: True

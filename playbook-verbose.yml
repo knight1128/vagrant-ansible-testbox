@@ -1,0 +1,31 @@
+- hosts: all
+  user: vagrant
+ # sudo: yes
+  vars:
+  - test : 1
+  - mmm : "{{ ansible_distribution_version  }}"
+
+  tasks:
+  - name : test
+    action:  command ls -al /home
+    register: vagrant
+  - debug: var=vagrant.stdout_lines
+#  - name : 1. install Apache
+#    apt: name=apache2 state=present
+  - name: install an apple
+    command: "{{item}}"
+    with_items:
+     - pwd
+     - mkdir -p 1
+     - touch test.txt
+
+  - debug: var=test
+  - debug: var={{ ansible_distribution_version | version_compare('12.04', '>=') }}
+  - debug: var={{ ansible_distribution_version  }}
+  - debug: var=mmm
+  - name: Debug sequence item value
+    debug: msg={{ 'Item\:\ %s'|format(item) }}
+    with_sequence: count=5 format="%02d"
+
+  - debug: msg={{ 'Item\:\ %02d'|format(item|int) }}
+    with_sequence: count=2 

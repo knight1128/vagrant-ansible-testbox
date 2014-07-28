@@ -1,0 +1,14 @@
+---
+
+- name : delete git cloned directory
+  shell: rm -rf {{ git_location }}
+
+- name : git clone
+  git: repo={{ git_clone_url }} dest={{ git_location }} update=no
+
+- name : mvn compile
+  command: chdir={{ git_location}} mvn package
+
+- name: change permission 
+  file: path=/app/git owner=vagrant group=vagrant state=directory recurse=yes
+
